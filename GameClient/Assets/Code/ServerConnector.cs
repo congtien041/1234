@@ -3,9 +3,10 @@ using UnityEngine.Networking;
 using System.Collections;
 using Fusion; 
 
+
 public class ServerConnector : MonoBehaviour {
     // Thay số 5015 bằng số Port bạn thấy ở Terminal
-    private string apiUrl = "http://localhost:5015/api/main"; 
+    private string apiUrl = "http://gameserver.runasp.net/api/Main";    
     private NetworkRunner _runner;
 
     void Start() {
@@ -17,6 +18,7 @@ public class ServerConnector : MonoBehaviour {
     IEnumerator LoginRoutine(string username, string password) {
         
         // SỬA DÒNG NÀY: Nối thêm password vào URL để khớp với Backend mới
+        // using (UnityWebRequest www = UnityWebRequest.Get($"{apiUrl}/login/{username}/{password}")) {
         using (UnityWebRequest www = UnityWebRequest.Get($"{apiUrl}/login/{username}/{password}")) {
             yield return www.SendWebRequest();
 

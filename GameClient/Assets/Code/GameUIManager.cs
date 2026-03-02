@@ -38,7 +38,9 @@ public class GameUIManager : MonoBehaviour {
     public Button btnRefresh;
     public Button btnLogout;
 
-    private string apiUrl = "http://localhost:5015/api/main"; 
+    // private string apiUrl = "http://localhost:5015/api/main";
+    // ĐỔI TỪ LOCALHOST SANG SERVER THẬT
+    private string apiUrl = "http://gameserver.runasp.net/api/Main"; 
     private NetworkRunner _runner;
 
     void Start() {

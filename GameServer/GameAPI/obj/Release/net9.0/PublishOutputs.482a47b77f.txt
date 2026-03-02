@@ -1,12 +1,6 @@
 D:\1234\GameServer\GameAPI\my_server\GameAPI.exe
-D:\1234\GameServer\GameAPI\my_server\my_server\web.config
 D:\1234\GameServer\GameAPI\my_server\appsettings.Development.json
 D:\1234\GameServer\GameAPI\my_server\appsettings.json
-D:\1234\GameServer\GameAPI\my_server\my_server\appsettings.Development.json
-D:\1234\GameServer\GameAPI\my_server\my_server\appsettings.json
-D:\1234\GameServer\GameAPI\my_server\my_server\GameAPI.deps.json
-D:\1234\GameServer\GameAPI\my_server\my_server\GameAPI.runtimeconfig.json
-D:\1234\GameServer\GameAPI\my_server\my_server\GameAPI.staticwebassets.endpoints.json
 D:\1234\GameServer\GameAPI\my_server\GameAPI.dll
 D:\1234\GameServer\GameAPI\my_server\GameAPI.runtimeconfig.json
 D:\1234\GameServer\GameAPI\my_server\GameAPI.pdb
