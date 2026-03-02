@@ -38,10 +38,12 @@ var app = builder.Build();
 // }
 
 // Xóa hoặc comment dòng if (app.Environment.IsDevelopment())
+// Tìm đoạn app.UseSwaggerUI và sửa thành:
+app.UseDeveloperExceptionPage(); 
 app.UseSwagger();
 app.UseSwaggerUI(c => {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Game API V1");
-    c.RoutePrefix = string.Empty; // Dòng này giúp bạn vào thẳng Swagger khi gõ gameserver.runasp.net
+    c.RoutePrefix = string.Empty;
 });
 
 app.UseAuthorization();
@@ -49,3 +51,6 @@ app.UseCors("AllowAll");
 app.MapControllers();
 
 app.Run();
+
+// public 
+// dotnet publish -c Release -o ./my_server

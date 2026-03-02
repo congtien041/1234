@@ -123,9 +123,3 @@ D:\1234\GameServer\GameAPI\obj\Release\net9.0\refint\GameAPI.dll
 D:\1234\GameServer\GameAPI\obj\Release\net9.0\GameAPI.pdb
 D:\1234\GameServer\GameAPI\obj\Release\net9.0\GameAPI.genruntimeconfig.cache
 D:\1234\GameServer\GameAPI\obj\Release\net9.0\ref\GameAPI.dll
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\web.config
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\appsettings.Development.json
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\appsettings.json
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\GameAPI.deps.json
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\GameAPI.runtimeconfig.json
-D:\1234\GameServer\GameAPI\bin\Release\net9.0\my_server\GameAPI.staticwebassets.endpoints.json
