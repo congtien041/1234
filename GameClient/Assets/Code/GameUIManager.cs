@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Networking;
 using System.Collections;
 using Fusion;
+using System.Collections.Generic;
 
 public class GameUIManager : MonoBehaviour {
     [Header("UI Panels")]
@@ -155,6 +156,8 @@ public class GameUIManager : MonoBehaviour {
         txtLevel.text = "Level: " + data.level.ToString();
         txtGold.text = "Vàng: " + data.gold.ToString();
         txtDiamonds.text = "Kim Cương: " + data.diamonds.ToString();
+
+        // FindObjectOfType<SocialManager>().StartSocialFeatures();
     }
 
     void OnRefreshClicked() {
@@ -180,37 +183,121 @@ public class GameUIManager : MonoBehaviour {
     }
 
     // --- ĐÃ NÂNG CẤP: LẤY THÔNG TIN TỪ DROPDOWN ĐỂ TÌM PHÒNG ---
+    // --- NÂNG CẤP: MATCHMAKING TỰ ĐỘNG THEO CHẾ ĐỘ SOLO / TEAM 2 / TEAM 4 ---
     async void StartFusion() {
+        // 1. Tạo Network Runner
         GameObject runnerObj = new GameObject("Fusion_NetworkRunner");
         _runner = runnerObj.AddComponent<NetworkRunner>();
         var sceneManager = runnerObj.AddComponent<NetworkSceneManagerDefault>();
 
-        // Lấy giá trị từ UI Dropdown
+        // 2. Lấy lựa chọn từ Dropdown
         int mapIndex = dropdownMap != null ? dropdownMap.value : 0; 
-        string modeName = dropdownMode != null ? dropdownMode.options[dropdownMode.value].text : "Default";
+        string modeName = dropdownMode != null ? dropdownMode.options[dropdownMode.value].text : "Solo";
 
-        // Đặt tên phòng dựa theo Map và Chế độ
-        string roomName = $"Phong_{modeName}_Map{mapIndex}";
-        
-        // Tính toán Scene cần load (Map 1 -> Scene 1, Map 2 -> Scene 2...)
-        int sceneBuildIndexToLoad = mapIndex + 1;
+        // 3. Quy định số người tối đa cho từng chế độ
+        int maxPlayers = 8; // Mặc định
+        if (modeName.Contains("Solo")) maxPlayers = 8;       // 8 người bắn tự do
+        else if (modeName.Contains("2")) maxPlayers = 4;     // 2 vs 2 (Tổng 4 người)
+        else if (modeName.Contains("4")) maxPlayers = 8;     // 4 vs 4 (Tổng 8 người)
 
-        Debug.Log($"Đang tìm trận... Phòng: {roomName} | Đang load Scene số: {sceneBuildIndexToLoad}");
+        // 4. Gắn thẻ (Tag) cho phòng để ghép đúng đối tượng
+        var customProps = new Dictionary<string, SessionProperty> {
+            { "GameMode", modeName }, // Lọc đúng chế độ (Solo/Team2/Team4)
+            { "MapIndex", mapIndex }  // Lọc đúng Map
+        };
 
+        int sceneBuildIndexToLoad = mapIndex + 1; // Giả sử Map 0 tương ứng Scene 1
+        Debug.Log($"Đang tìm trận... Chế độ: {modeName} | Map: {mapIndex} | Max: {maxPlayers} người");
+
+        // 5. Bắt đầu ghép trận
         var result = await _runner.StartGame(new StartGameArgs() {
-            GameMode = GameMode.Shared,
-            SessionName = roomName, // Ép vào chung phòng theo tùy chọn
+            GameMode = GameMode.Shared, 
+            
+            // QUAN TRỌNG NHẤT: Bỏ trống SessionName để Fusion TỰ ĐỘNG TÌM PHÒNG.
+            // Nếu không có phòng nào khớp, nó sẽ TỰ TẠO PHÒNG MỚI.
+            SessionName = "", 
+            
+            SessionProperties = customProps, // Bắt buộc trùng khớp Mode và Map mới cho vào chung
+            PlayerCount = maxPlayers,        // Giới hạn số người trong phòng
             SceneManager = sceneManager, 
-            Scene = SceneRef.FromIndex(sceneBuildIndexToLoad) // Load đúng màn chơi
+            Scene = SceneRef.FromIndex(sceneBuildIndexToLoad)
         });
         
         if (result.Ok) {
-            Debug.Log($"ĐÃ VÀO PHÒNG {roomName} THÀNH CÔNG!");
+            Debug.Log($"ĐÃ VÀO PHÒNG CHẾ ĐỘ [{modeName}] THÀNH CÔNG!");
+            // Vì là Shared Mode, người chơi sẽ vào phòng và chơi được luôn dù chưa đủ người.
         } else {
             Debug.LogError("Lỗi vào phòng: " + result.ShutdownReason);
-            btnFindMatch.interactable = true;
+            btnFindMatch.interactable = true; // Bật lại nút nếu lỗi
         }
     }
+
+
+    // Hàm này được SocialManager gọi khi bấm "Chấp nhận" lời mời
+public async void JoinRoomFromInvite(string roomName, string modeName) {
+    GameObject runnerObj = new GameObject("Fusion_NetworkRunner");
+    _runner = runnerObj.AddComponent<NetworkRunner>();
+    var sceneManager = runnerObj.AddComponent<NetworkSceneManagerDefault>();
+
+    int maxPlayers = modeName.Contains("2") ? 4 : 8;
+
+    // Phải thiết lập đúng GameMode để Fusion cho vào phòng
+    var customProps = new System.Collections.Generic.Dictionary<string, SessionProperty> {
+        { "GameMode", modeName } 
+    };
+
+    Debug.Log($"Vào phòng bạn mời: {roomName}");
+
+    var result = await _runner.StartGame(new StartGameArgs() {
+        GameMode = GameMode.Shared, 
+        SessionName = roomName, // Ép vào đúng cái tên phòng bạn mình gửi
+        SessionProperties = customProps,
+        PlayerCount = maxPlayers,
+        SceneManager = sceneManager, 
+        Scene = SceneRef.FromIndex(1) // Tuỳ chỉnh index Map sau
+    });
+    
+    if (result.Ok) {
+        Debug.Log("ĐÃ VÀO PHÒNG BẠN BÈ THÀNH CÔNG!");
+    } else {
+        Debug.LogError("Lỗi vào phòng: " + result.ShutdownReason);
+    }
+}
+
+// CHỦ PHÒNG GỌI HÀM NÀY ĐỂ VÀO ĐỨNG CHỜ BẠN BÈ
+    public async void HostRoomForFriend(string roomName, string modeName) {
+        GameObject runnerObj = new GameObject("Fusion_NetworkRunner");
+        _runner = runnerObj.AddComponent<NetworkRunner>();
+        var sceneManager = runnerObj.AddComponent<NetworkSceneManagerDefault>();
+
+        // Giới hạn người chơi: Team 2 (4 người), Team 4 (8 người)
+        int maxPlayers = modeName.Contains("2") ? 4 : 8;
+
+        var customProps = new System.Collections.Generic.Dictionary<string, SessionProperty> {
+            { "GameMode", modeName } 
+        };
+
+        Debug.Log($"[HOST] Đang tạo phòng bí mật: {roomName} chế độ {modeName}");
+
+        var result = await _runner.StartGame(new StartGameArgs() {
+            GameMode = GameMode.Shared, 
+            SessionName = roomName, // ÉP ĐÚNG TÊN PHÒNG NÀY (Không được để trống)
+            SessionProperties = customProps,
+            PlayerCount = maxPlayers,
+            SceneManager = sceneManager, 
+            Scene = SceneRef.FromIndex(1) // Thay đổi số 1 thành Index Map của Tiến
+        });
+        
+        if (result.Ok) {
+            Debug.Log($"[HOST] ĐÃ TẠO PHÒNG XONG. HÃY ĐỨNG CHỜ BẠN BÈ BẤM CHẤP NHẬN!");
+            // (Tùy chọn) Ẩn Lobby UI đi, hiện màn hình Loading Game
+            panelLobby.SetActive(false); 
+        } else {
+            Debug.LogError("Lỗi tạo phòng: " + result.ShutdownReason);
+        }
+    }
+
+    
 }
 
 [System.Serializable]

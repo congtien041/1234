@@ -13,6 +13,7 @@ public class Player {
     public long Gold { get; set; } = 0;
     public long Diamonds { get; set; } = 0;
     public string EquippedCharacter { get; set; } = "Char_Default";
+    public DateTime LastOnline { get; set; } = DateTime.UtcNow;
 }
 
 public class PlayerCharacter {
@@ -30,8 +31,26 @@ public class Inbox {
     public bool IsClaimed { get; set; } = false;
 }
 
+public class Friendship {
+    [Key] public int Id { get; set; }
+    public Guid PlayerId1 { get; set; }
+    public Guid PlayerId2 { get; set; }
+    public string Status { get; set; } = "Pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
+    public class PartyInvite {
+    [Key] public int Id { get; set; }
+    public Guid SenderId { get; set; }
+    public Guid ReceiverId { get; set; }
+    public string RoomName { get; set; } = "";
+    public string GameMode { get; set; } = "";
+    public string Status { get; set; } = "Pending";
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
+
 // Các class phụ trợ để nhận dữ liệu từ Unity
-public class AuthRequest {
+    public class AuthRequest {
     public string Username { get; set; } = "";
     public string Password { get; set; } = "";
 }

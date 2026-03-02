@@ -14,15 +14,36 @@ public class MainController : ControllerBase {
     // 1. API ĐĂNG KÝ (Tạo tài khoản mới)
     [HttpGet("register/{username}/{password}")]
     public async Task<IActionResult> Register(string username, string password) {
-        bool isExist = await _db.Players.AnyAsync(x => x.Username == username);
-        if (isExist) return BadRequest("Tên tài khoản đã có người sử dụng. Vui lòng chọn tên khác!");
+        try {
+            // Dùng FirstOrDefault để check tồn tại (nhẹ hơn AnyAsync trong một số trường hợp Pooler)
+            var existingUser = await _db.Players
+                .AsNoTracking() // Thêm cái này để tăng tốc độ đọc
+                .FirstOrDefaultAsync(x => x.Username == username);
+                
+            if (existingUser != null) 
+                return BadRequest("Tên tài khoản đã có người sử dụng!");
 
-        var newPlayer = new Player { Username = username, Password = password };
-        _db.Players.Add(newPlayer);
-        _db.PlayerCharacters.Add(new PlayerCharacter { PlayerId = newPlayer.Id, CharacterId = "Char_Default" });
-        
-        await _db.SaveChangesAsync();
-        return Ok(new { message = "Đăng ký thành công! Hãy quay lại trang Đăng nhập." });
+            var newPlayer = new Player { 
+                Username = username, 
+                Password = password,
+                Id = Guid.NewGuid() // Chủ động tạo ID để tránh đợi DB trả về
+            };
+            
+            _db.Players.Add(newPlayer);
+            
+            // Thêm nhân vật mặc định
+            _db.PlayerCharacters.Add(new PlayerCharacter { 
+                PlayerId = newPlayer.Id, 
+                CharacterId = "Char_Default" 
+            });
+
+            await _db.SaveChangesAsync();
+            return Ok(new { message = "Đăng ký thành công!" });
+        }
+        catch (Exception ex) {
+            // Nếu lỗi, nó sẽ báo chi tiết lỗi ghi vào DB thay vì Timeout chung chung
+            return StatusCode(500, $"Lỗi ghi dữ liệu: {ex.Message}");
+        }
     }
 
     // 2. API ĐĂNG NHẬP
